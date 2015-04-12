@@ -1,10 +1,14 @@
-from ascavis_data import alcdef, sha
+from ascavis_data import alcdef, sha, mpc
 import httplib2
-import json
+import simplejson as json
 from flask import Flask, Response
 
 
 API_MIME = "text/plain"
+DB_SOURCE = '192.168.100.1'
+DB_user = 'root'
+DB_pw = 'space'
+DB_name = 'mp_properties'
 
 app = Flask(__name__)
 spitzer = sha.SpitzerHeritageArchive(httplib2.Http(".cache"))
@@ -22,6 +26,16 @@ def spectrum(jpl):
         spitzer.download_spectrum(filter(sha.is_spectrum, observations)[0])[1]
     )
     return Response(json.dumps(spectrum), mimetype=API_MIME)
+
+@app.route("/mpc/<int:jpl>")
+def mpc_call(jpl):
+    mpc_data = mpc.query_mpc_db(DB_SOURCE,DB_user,DB_pw,DB_name,max_amount_of_data=1, parameters_to_limit=['number='+str(jpl)], order_by=[])
+    mpc_data = mpc_data[0]['absolute_magnitude']
+    return Response(json.dumps(mpc_data), mimetype=API_MIME)
+
+#@app.route("/mpc/<str:mpc_condition>")
+#def mpc(mpc_condition):
+    
 
 
 if __name__ == "__main__":
