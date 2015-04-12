@@ -1,7 +1,7 @@
 from ascavis_data import alcdef, sha, mpc
 import httplib2
 import simplejson as json
-from flask import Flask, Response, send_from_directory
+from flask import Flask, Response, send_from_directory, request
 
 
 API_MIME = "text/plain"
@@ -32,6 +32,16 @@ def spectrum(jpl):
 def mpc_call(jpl):
     mpc_data = mpc.query_mpc_db(DB_SOURCE,DB_user,DB_pw,DB_name,max_amount_of_data=1, parameters_to_limit=['number='+str(jpl)], order_by=[])
     return Response(json.dumps(mpc_data[0]), mimetype=API_MIME)
+
+@app.route('/mpc_more/',methods=['POST','GET'])
+def mpc_more_call():
+    mpc_more_dataamount = request.args.get('no','')
+    #if (mpc_more_dataamount == ''):
+    #    mpc_more_dataamout = 1
+    param_limit = request.args.get('paramlim','')
+    orderby = request.args.get('orderby','')
+    mpc_data_more = mpc.query_mpc_db(DB_SOURCE,DB_user,DB_pw,DB_name,max_amount_of_data=mpc_more_dataamount, parameters_to_limit=[], order_by=[])
+    return Response(json.dumps(mpc_data_more), mimetype=API_MIME)
 
 @app.route('/app/<path:filename>')
 def send_file(filename):
