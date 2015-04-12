@@ -31,8 +31,7 @@ def spectrum(jpl):
 @app.route("/mpc/<int:jpl>")
 def mpc_call(jpl):
     mpc_data = mpc.query_mpc_db(DB_SOURCE,DB_user,DB_pw,DB_name,max_amount_of_data=1, parameters_to_limit=['number='+str(jpl)], order_by=[])
-    mpc_data = mpc_data[0]['absolute_magnitude']
-    return Response(json.dumps(mpc_data), mimetype=API_MIME)
+    return Response(json.dumps(mpc_data[0]), mimetype=API_MIME)
 
 @app.route('/app/<path:filename>')
 def send_file(filename):
