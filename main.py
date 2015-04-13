@@ -1,6 +1,8 @@
 from ascavis_data import alcdef, sha, mpc
 import httplib2
 import simplejson as json
+import glob
+import os
 from flask import Flask, Response, send_from_directory, request
 
 
@@ -10,6 +12,7 @@ DB_user = 'root'
 DB_pw = 'space'
 DB_name = 'mp_properties'
 ASSET_DIR = "assets/"
+ALCDEF_DIR = "alcdef/"
 
 app = Flask(__name__)
 spitzer = sha.SpitzerHeritageArchive(httplib2.Http(".cache"))
@@ -18,6 +21,7 @@ spitzer = sha.SpitzerHeritageArchive(httplib2.Http(".cache"))
 @app.route("/")
 def hello_world():
     return 'Hello World!'
+
 
 @app.route("/spectrum/<int:jpl>")
 def spectrum(jpl):
@@ -28,10 +32,29 @@ def spectrum(jpl):
     )
     return Response(json.dumps(spectra), mimetype=API_MIME)
 
+
+@app.route("/lightcurve/<int:jpl>")
+def lightcurve(jpl):
+    """Lightcurve API
+
+    Returns a list of lightcurve observations available for a given JPL
+    asteroid number.
+
+    Note: for now, this route assumes the lightcurve data to be available as
+    files in some directory and just picks the first one that appears to be
+    appropriate (i.e. named ALCDEF_<jpl>_*).
+
+    """
+    files = glob.glob(os.path.join(ALCDEF_DIR, "ALCDEF_{}_*".format(jpl)))
+    parsed = alcdef.alcdef.parse_string(open(files[0]).read())
+    return Response(json.dumps(parsed), mimetype=API_MIME)
+
+
 @app.route("/mpc/<int:jpl>")
 def mpc_call(jpl):
     mpc_data = mpc.query_mpc_db(DB_SOURCE,DB_user,DB_pw,DB_name,max_amount_of_data=1, parameters_to_limit=['number='+str(jpl)], order_by=[])
     return Response(json.dumps(mpc_data[0]), mimetype=API_MIME)
+
 
 @app.route('/mpc_more/',methods=['POST','GET'])
 def mpc_more_call():
@@ -44,9 +67,11 @@ def mpc_more_call():
     mpc_data_more = mpc.query_mpc_db(DB_SOURCE,DB_user,DB_pw,DB_name,max_amount_of_data=mpc_more_dataamount, parameters_to_limit=[param_limit], order_by=[orderby])
     return Response(json.dumps(mpc_data_more), mimetype=API_MIME)
 
+
 @app.route('/app/<path:filename>')
 def send_file(filename):
     return send_from_directory(ASSET_DIR, filename)
+
 
 if __name__ == "__main__":
     app.debug = True
