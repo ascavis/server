@@ -4,17 +4,24 @@ import simplejson as json
 import glob
 import os
 from flask import Flask, Response, send_from_directory, request
+import config
 
+# Parse configuration
+cfg_parser = config.parser()
+cfg_parser.read(["server.cfg", os.path.expanduser("~/.config/ascavis/server.cfg")])
+options = dict(cfg_parser.items("ascavis_server"))
+DB_SOURCE = options["db_address"]
+DB_user = options["db_username"]
+DB_pw = options["db_password"]
+DB_name = options["db_name"]
+ASSET_DIR = options["asset_dir"]
+ALCDEF_DIR = options["alcdef_dir"]
+API_MIME = options["api_mime"]
 
-API_MIME = "text/plain"
-DB_SOURCE = '192.168.100.1'
-DB_user = 'root'
-DB_pw = 'space'
-DB_name = 'mp_properties'
-ASSET_DIR = "assets/"
-ALCDEF_DIR = "alcdef/"
-
+# Setup server
 app = Flask(__name__)
+
+# Setup SHA client
 spitzer = sha.SpitzerHeritageArchive(httplib2.Http(".cache"))
 
 
