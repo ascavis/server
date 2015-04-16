@@ -1,4 +1,5 @@
-from ascavis_data import alcdef, sha, mpc
+from ascavis_data import alcdef, sha
+from ascavis_data.mpc import MpcSqlConnection, mpc_db_query
 import httplib2
 import simplejson as json
 import glob
@@ -10,13 +11,11 @@ import config
 cfg_parser = config.parser()
 cfg_parser.read(["server.cfg", os.path.expanduser("~/.config/ascavis/server.cfg")])
 options = dict(cfg_parser.items("ascavis_server"))
-DB_SOURCE = options["db_address"]
-DB_user = options["db_username"]
-DB_pw = options["db_password"]
-DB_name = options["db_name"]
+
 ASSET_DIR = options["asset_dir"]
 ALCDEF_DIR = options["alcdef_dir"]
 API_MIME = options["api_mime"]
+
 
 # Setup server
 app = Flask(__name__)
@@ -71,7 +70,10 @@ def mpc_call(jpl):
     about an asteroid from the database of the Minor Planet Center.
 
     """
-    mpc_data = mpc.query_mpc_db(DB_SOURCE,DB_user,DB_pw,DB_name,max_amount_of_data=1, parameters_to_limit=['number='+str(jpl)], order_by=[])
+    query = mpc_db_query(max_amount_of_data=1, parameters_to_limit=['number='+str(jpl)])
+    with MpcSqlConnection(options["db_address"], options["db_username"],
+            options["db_password"], options["db_name"]) as mpc:
+        mpc_data = mpc.retrieve_data(query)
     return Response(json.dumps(mpc_data[0]), mimetype=API_MIME)
 
 
@@ -96,11 +98,15 @@ def mpc_more_call():
     /mpc_more/?orderby=absolute_magnitude%20DESC&no=10&paramlim=residual_rms%3E0.2%20AND%20inclination%3E6
 
     """
-    # second parameter of get is the default value for when the key is not given
-    mpc_more_dataamount = request.args.get('no',1)
-    param_limit = request.args.get('paramlim','')
-    orderby = request.args.get('orderby','')
-    mpc_data_more = mpc.query_mpc_db(DB_SOURCE,DB_user,DB_pw,DB_name,max_amount_of_data=mpc_more_dataamount, parameters_to_limit=[param_limit], order_by=[orderby])
+    with MpcSqlConnection(options["db_address"], options["db_username"],
+            options["db_password"], options["db_name"]) as mpc:
+        # second parameter of get is the default value for when the key is not given
+        mpc_more_dataamount = request.args.get('no',1)
+        param_limit = request.args.get('paramlim','')
+        orderby = request.args.get('orderby','')
+        query = mpc_db_query(max_amount_of_data=mpc_more_dataamount,
+            parameters_to_limit=[param_limit], order_by=[orderby])
+        mpc_data_more = mpc.retrieve_data(query)
     return Response(json.dumps(mpc_data_more), mimetype=API_MIME)
 
 
