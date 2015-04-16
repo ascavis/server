@@ -1,3 +1,6 @@
+parcon
+simplejson
+pymysql
 flask
 httplib2
-https://github.com/ascavis/data
+https://github.com/ascavis/data (ascavis_data)
