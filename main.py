@@ -4,7 +4,7 @@ import httplib2
 import simplejson as json
 import glob
 import os
-from flask import Flask, Response, send_from_directory, request
+from flask import Flask, Response, send_from_directory, request, redirect
 import config
 
 # Parse configuration
@@ -27,7 +27,7 @@ spitzer = sha.SpitzerHeritageArchive(httplib2.Http(".cache"))
 @app.route("/")
 def root():
     """Base route"""
-    return redirect('/app/index.html', 301)
+    return redirect('/app/index.html', 302)
 
 
 @app.route("/spectrum/<int:jpl>")
