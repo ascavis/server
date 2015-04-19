@@ -37,9 +37,9 @@ def spectrum(jpl):
     Returns a list of spectra available for an asteroid given its JPL number.
 
     """
-    observations = sha.parse_table(spitzer.query_by_jpl(jpl)[1])
+    observations = sha.parse_table(spitzer.query_by_jpl(jpl))
     spectra = map(
-        lambda obs: sha.parse_table(spitzer.download_spectrum(obs)[1]),
+        lambda obs: sha.parse_table(spitzer.download_spectrum(obs)),
         filter(sha.is_spectrum, observations)
     )
     return Response(json.dumps(spectra), mimetype=API_MIME)
