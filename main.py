@@ -27,7 +27,7 @@ spitzer = sha.SpitzerHeritageArchive(httplib2.Http(".cache"))
 @app.route("/")
 def root():
     """Base route"""
-    return 'Hello World!'
+    return send_from_directory(ASSET_DIR, "index.html")
 
 
 @app.route("/spectrum/<int:jpl>")
